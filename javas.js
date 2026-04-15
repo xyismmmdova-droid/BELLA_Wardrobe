@@ -1,167 +1,149 @@
-// Məhsulları ekrana çıxararkən select-ləri də əlavə edirik
-const productList = document.getElementById('product-list');
-products.forEach(p => {
-    productList.innerHTML += `
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 shadow-sm text-center p-2">
-                <img src="${p.img}" class="card-img-top product-img" alt="${p.name}">
-                <div class="card-body p-2">
-                    <h6 class="mb-1">${p.name}</h6>
-                    <p class="text-primary small fw-bold">${p.price} AZN</p>
+// 1. MƏHSUL DATA BAZASI
+const products = [
+    { id: 1, name: "Dəri Ayaqqabı", price: 85, type: "shoes", img: "https://come4buy.com/cdn/shop/files/come4buy_24_869060c5-2b37-4af9-ac64-785cb0d04a06_800x.jpg?v=1749622320" },
+    { id: 2, name: "Pambıq Kofta", price: 40, type: "clothing", img: "https://i5.walmartimages.com/seo/Olyvenn-Women-Pullover-Sweaters-Long-Sleeve-V-Neck-Cable-Knit-Chunky-Sweater-Loose-Casual-Fall-Winter-Knitwear-Blouse-Tops-White-M_486c743e-70c8-434d-a932-c67064d2bf9a.d7cb4b8680eda20b7e31bd8b4280892a.jpeg?odnHeight=768&odnWidth=768&odnBg=FFFFFF" },
+    { id: 3, name: "Klassik Ətək", price: 50, type: "clothing", img: "https://s.alicdn.com/@sc04/kf/H813aedaf8ac54ca2931cab97e5acf3f5S/Wholesale-2025-European-American-Summer-Bohemian-A-Line-Midi-Skirt-Flowing-Swing-Layered-Cake-Ladies-Elegant-Skirt.jpg_300x300.jpg" },
+    { id: 4, name: "Cins Şalvar", price: 65, type: "clothing", img: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400" },
+    { id: 5, name: "Ziyafət Donu", price: 150, type: "clothing", img: "https://image.made-in-china.com/202f0j00qnKlgTmznkrV/Women-Elegant-Slim-Chiffon-Summer-Lace-Party-Long-Dress-Europe-Solid-Color-Bridesmaids-Wedding-Maxi-Dresses.webp" },
+    { id: 6, name: "Yun Corablar", price: 12, type: "clothing", img: "https://come4buy.com/cdn/shop/products/SHOE04E.jpg?v=1640184263" }
+];
+
+let cart = [];
+
+// 2. MƏHSULLARI EKRANA ÇIXARMAQ
+function displayProducts() {
+    const container = document.getElementById('product-container');
+    if (!container) return; // Errorun qarşısını almaq üçün
+
+    container.innerHTML = products.map(p => `
+        <div class="col-md-6 col-xl-4 mb-4">
+            <div class="card h-100 shadow-sm border-0">
+                <img src="${p.img}" class="card-img-top product-img" alt="${p.name}" style="height: 200px; object-fit: contain;">
+                <div class="card-body d-flex flex-column">
+                    <h6 class="card-title fw-bold">${p.name}</h6>
+                    <p class="text-success fw-bold small">${p.price} AZN</p>
                     
-                    ${p.type === "Dəri Ayaqqabı" ? `
-<select id="size-${p.id}" class="form-select form-select-sm mb-2 bg-light">
-<option value="35">Ölçü: 35</option>
-<option value="36">Ölçü: 36</option>
-<option value="37">Ölçü: 37</option>
-<option value="38">Ölçü: 38</option>
-</select>
-` : `
-<select id="size-${p.id}" class="form-select form-select-sm mb-2 bg-light">
-<option value="35">Ölçü: S</option>
-<option value="M">Ölçü: M</option>
-<option value="L">Ölçü: L</option>
-<option value="XL">Ölçü: XL</option>
-</select>
-`}
+                    <div class="mt-auto">
+                        <select id="size-${p.id}" class="form-select form-select-sm mb-2 bg-light">
+                            ${p.type === "shoes" 
+                                ? '<option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option>' 
+                                : '<option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option>'}
+                        </select>
 
-                    <select id="color-${p.id}" class="form-select form-select-sm mb-2">
-                        <option value="Qara">Rəng: Qara</option>
-                        <option value="Ağ">Rəng: Ağ</option>
-                        <option value="Mavi">Rəng: Mavi</option>
-                            <option value="Qırmızı">Rəng: Qırmızı</option>
-                    </select>
+                        <select id="color-${p.id}" class="form-select form-select-sm mb-3 bg-light">
+                            <option value="Qara">Qara</option>
+                            <option value="Ağ">Ağ</option>
+                            <option value="Mavi">Mavi</option>
+                            <option value="Qırmızı">Qırmızı</option>
+                        </select>
 
-                    <button onclick="addToCart(${p.id})" class="btn btn-success btn-sm w-100">Səbətə at🛒</button>
-                    <button onclick="removeFromCart(${item.uniqueId})" class="btn btn-sm text-danger shadow-none">
-    <i class="fas fa-trash-alt"></i>
-</button>
+                        <button onclick="addToCart(${p.id})" class="btn btn-success btn-sm w-100 rounded-pill">Səbətə at🛒</button>
+                    </div>
                 </div>
             </div>
         </div>
-    `;
-});
+    `).join('');
+}
 
-function addToCart(id) {
+// 3. SƏBƏTƏ ƏLAVƏ ETMƏK
+window.addToCart = function (id) {
     const product = products.find(p => p.id === id);
-    
-    // İstifadəçinin seçdiyi dəyərləri götürürük
     const selectedSize = document.getElementById(`size-${id}`).value;
     const selectedColor = document.getElementById(`color-${id}`).value;
 
-    // Səbətdə eyni ID, eyni Ölçü və eyni Rəngdə məhsul varmı?
-    const existingItem = cart.find(item => 
-        item.id === id && 
-        item.size === selectedSize && 
-        item.color === selectedColor
+    const existingItem = cart.find(item =>
+        item.id === id && item.size === selectedSize && item.color === selectedColor
     );
 
     if (existingItem) {
-        existingItem.quantity++; // Hər şey eynidirsə, yalnız sayı artır
+        existingItem.quantity++;
     } else {
-        // Fərqlidirsə (məsələn: eyni kofta amma fərqli rəng), yeni element kimi əlavə et
-        cart.push({ 
-            ...product, 
-            quantity: 1, 
-            size: selectedSize, 
-            color: selectedColor 
+        cart.push({
+            ...product,
+            quantity: 1,
+            size: selectedSize,
+            color: selectedColor,
+            uniqueId: Date.now() + Math.random()
         });
     }
     updateCart();
-}
-function setLanguage(lang) {
+};
 
-  const data = {
-    az: {
-      title: "Salam",
-      desc: "Bu mənim saytımdır",
-      products: "Məhsullar",
-      contact: "Əlaqə",
-      privacy: "Məxfilik"
-    },
-    en: {
-      title: "Hello",
-      desc: "This is my website",
-      products: "Products",
-      contact: "Contact",
-      privacy: "Privacy"
-    },
-    ru: {
-      title: "Привет",
-      desc: "Это мой сайт",
-      products: "Товары",
-      contact: "Контакты",
-      privacy: "Конфиденциальность"
-    }
-  };
+// 4. SƏBƏTDƏN SİLMƏK
+window.removeFromCart = function (uniqueId) {
+    cart = cart.filter(item => item.uniqueId !== uniqueId);
+    updateCart();
+};
 
-  document.getElementById("title").innerText = data[lang].title;
-  document.getElementById("desc").innerText = data[lang].desc;
-
-  document.getElementById("nav-products").innerText = data[lang].products;
-  document.getElementById("nav-contact").innerText = data[lang].contact;
-  document.getElementById("nav-privacy").innerText = data[lang].privacy;
-}
-// Səbət siyahısını yeniləyən funksiya (Görünüş üçün)
+// 5. SƏBƏTİ YENİLƏMƏK
 function updateCart() {
     const cartList = document.getElementById('cart-items');
     const cartCount = document.getElementById('cart-count');
-    const totalPriceEl = document.getElementById('total-price'); // total price elementi
+    const totalPriceEl = document.getElementById('total-price');
 
-    cartList.innerHTML = '';
+    if (cart.length === 0) {
+        cartList.innerHTML = '<li class="list-group-item text-muted text-center py-4">Səbətiniz boşdur</li>';
+        cartCount.innerText = '0';
+        totalPriceEl.innerText = '0 AZN';
+        return;
+    }
 
-    let totalSum = 0; // cəmi qiymət
+    let totalSum = 0;
+    let totalQty = 0;
+    let cartHTML = '';
+
     cart.forEach(item => {
-        totalSum += item.price * item.quantity; // qiymət * miqdar
-
-        cartList.innerHTML += `
-            <li class="list-group-item d-flex justify-content-between align-items-center small">
-                <div>
-                    <strong>${item.name}</strong><br>
-                    <small class="text-muted">${item.size} / ${item.color}</small>
-                    <span class="badge bg-primary ms-1">x${item.quantity}</span>
-                    <span class="text-success ms-2">${item.price * item.quantity} AZN</span>
+        totalSum += item.price * item.quantity;
+        totalQty += item.quantity;
+        cartHTML += `
+            <li class="list-group-item d-flex justify-content-between align-items-center px-2">
+                <div style="flex: 1">
+                    <div class="fw-bold small">${item.name}</div>
+                    <div class="text-muted" style="font-size: 11px;">${item.size} / ${item.color}</div>
+                    <div class="text-success fw-bold small">${item.price * item.quantity} AZN (x${item.quantity})</div>
                 </div>
-                <button onclick="removeFromCart('${item.id}-${item.size}-${item.color}')" class="btn btn-sm text-danger">
+                <button onclick="removeFromCart(${item.uniqueId})" class="btn btn-sm text-danger border-0">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </li>
         `;
     });
 
-    cartCount.innerText = cart.reduce((total, item) => total + item.quantity, 0);
-    totalPriceEl.innerText = totalSum + " AZN"; // cəmi qiyməti ekrana çıxarır
+    cartList.innerHTML = cartHTML;
+    cartCount.innerText = totalQty;
+    totalPriceEl.innerText = totalSum + ' AZN';
 }
 
-// Silmə funksiyasını ID + Size + Color kombinasiyasına görə tənzimləyirik
-function removeFromCart(uniqueKey) {
-    cart = cart.filter(item => `${item.id}-${item.size}-${item.color}` !== uniqueKey);
-    updateCart();
-}
-// Sifarişi rəsmiləşdir butonu
-const checkoutBtn = document.querySelector('.btn.btn-success.w-100.mt-3.shadow-sm');
-checkoutBtn.addEventListener('click', () => {
-    if(cart.length === 0){
+// 6. DİL DƏYİŞMƏ
+window.setLanguage = function(lang) {
+    const data = {
+        az: { title: "MODA MAĞAZASI", products: "Məhsullar", contact: "Əlaqə", privacy: "Məxfilik" },
+        en: { title: "FASHION STORE", products: "Products", contact: "Contact", privacy: "Privacy" },
+        ru: { title: "МАГАЗИН МОДЫ", products: "Товары", contact: "Контакты", privacy: "Конфиденциальность" }
+    };
+
+    // Naviqasiya linklərini tapmaq (id əlavə etmək daha yaxşı olar, amma mövcud struktura görə selectorla tapırıq)
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks[1].innerText = data[lang].products;
+    navLinks[2].innerText = data[lang].contact;
+    navLinks[3].innerText = data[lang].privacy;
+    
+    document.querySelector('h1.text-center').innerText = data[lang].title;
+};
+
+// 7. SİFARİŞİ TƏSDİQLƏMƏK
+window.checkout = function() {
+    if (cart.length === 0) {
         alert("Səbətiniz boşdur!");
         return;
     }
-    // Modal göstərmək
     const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
     orderModal.show();
-
-    // Səbəti təmizləmək
     cart = [];
     updateCart();
-});
-function checkout() {
-    if(cart.length === 0){
-        alert("Səbətiniz boşdur!");
-    } else {
-        var orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
-        orderModal.show();
+};
 
-        // Səbəti təmizləyirik
-        cart = [];
-        updateCart();
-    }
-}
+// BAŞLAT
+document.addEventListener('DOMContentLoaded', () => {
+    displayProducts();
+});
